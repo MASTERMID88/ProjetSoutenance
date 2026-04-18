@@ -1,0 +1,131 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %} Releve #{{ releve.id }} - Validation {% endblock title %}
+
+{% block content %}
+<div class="content">
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert alert-{{ m.tags|default:'info' }}">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Releve #{{ releve.id }}</h4>
+          <p class="card-category">Saisi par {{ releve.collecteur.username }} le {{ releve.created_at|date:"d/m/Y H:i" }}</p>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-sm-4">Produit</dt>
+            <dd class="col-sm-8">{{ releve.produit.nom }}{% if releve.produit.variete %} ({{ releve.produit.variete }}){% endif %}</dd>
+
+            <dt class="col-sm-4">Marche</dt>
+            <dd class="col-sm-8">{{ releve.marche.nom }} — {{ releve.marche.quartier }}, {{ releve.marche.commune }}, {{ releve.marche.region }}</dd>
+
+            <dt class="col-sm-4">Date du releve</dt>
+            <dd class="col-sm-8">{{ releve.date_releve|date:"d/m/Y H:i" }}</dd>
+
+            <dt class="col-sm-4">Prix</dt>
+            <dd class="col-sm-8"><strong>{{ releve.prix }} {{ releve.produit.unite.symbole }}</strong></dd>
+
+            <dt class="col-sm-4">Source</dt>
+            <dd class="col-sm-8">{{ releve.source|default:"—" }}</dd>
+
+            <dt class="col-sm-4">Commentaire</dt>
+            <dd class="col-sm-8">{{ releve.commentaire|default:"—"|linebreaksbr }}</dd>
+
+            <dt class="col-sm-4">Statut actuel</dt>
+            <dd class="col-sm-8">
+              {% if releve.statut == 'VALIDE' %}<span class="badge badge-success">{{ releve.get_statut_display }}</span>
+              {% elif releve.statut == 'REJETE' %}<span class="badge badge-danger">{{ releve.get_statut_display }}</span>
+              {% elif releve.statut == 'EN_ATTENTE' %}<span class="badge badge-warning">{{ releve.get_statut_display }}</span>
+              {% else %}<span class="badge badge-secondary">{{ releve.get_statut_display }}</span>{% endif %}
+            </dd>
+          </dl>
+        </div>
+      </div>
+
+      {% if autres_releves_jour %}
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title">Autres releves le meme jour sur ce marche</h5>
+          <p class="card-category">Pour comparaison et detection d'anomalies</p>
+        </div>
+        <div class="card-body">
+          <table class="table">
+            <thead><tr><th>Collecteur</th><th>Prix</th><th>Heure</th><th>Statut</th></tr></thead>
+            <tbody>
+              {% for a in autres_releves_jour %}
+              <tr>
+                <td>{{ a.collecteur.username }}</td>
+                <td>{{ a.prix }}</td>
+                <td>{{ a.date_releve|date:"H:i" }}</td>
+                <td>{{ a.get_statut_display }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if releve.validations.all %}
+      <div class="card">
+        <div class="card-header"><h5 class="card-title">Historique des decisions</h5></div>
+        <div class="card-body">
+          <ul class="list-unstyled">
+            {% for v in releve.validations.all %}
+            <li class="mb-2">
+              {% if v.decision == 'VALIDE' %}<span class="badge badge-success">Validation</span>
+              {% else %}<span class="badge badge-danger">Rejet</span>{% endif %}
+              par <strong>{{ v.admin.username }}</strong>
+              le {{ v.date_validation|date:"d/m/Y H:i" }}
+              {% if v.motif %}<div class="text-muted"><em>Motif :</em> {{ v.motif }}</div>{% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header"><h5 class="card-title">Decision</h5></div>
+        <div class="card-body">
+          {% if releve.statut == 'EN_ATTENTE' %}
+            <form method="post" action="{% url 'admin_releve_decider' releve.pk 'valider' %}" class="mb-3">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success btn-block">
+                <i class="tim-icons icon-check-2"></i> Valider ce releve
+              </button>
+            </form>
+
+            <form method="post" action="{% url 'admin_releve_decider' releve.pk 'rejeter' %}">
+              {% csrf_token %}
+              <div class="form-group">
+                <label>Motif de rejet <span class="text-danger">*</span></label>
+                <textarea name="motif" class="form-control" rows="3" required placeholder="Ex: prix incoherent, source non verifiee..."></textarea>
+              </div>
+              <button type="submit" class="btn btn-danger btn-block">
+                <i class="tim-icons icon-simple-remove"></i> Rejeter
+              </button>
+            </form>
+          {% else %}
+            <p class="text-muted">Ce releve a deja ete traite (statut : {{ releve.get_statut_display }}).</p>
+          {% endif %}
+
+          <hr>
+          <a class="btn btn-secondary btn-block btn-sm" href="{% url 'admin_validation_queue' %}">
+            Retour a la file
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

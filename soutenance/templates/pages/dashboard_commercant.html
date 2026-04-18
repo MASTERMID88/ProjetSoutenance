@@ -1,0 +1,99 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %} Espace Commercant {% endblock title %}
+
+{% block content %}
+<div class="content">
+  <div class="row">
+    <div class="col-12 mb-3">
+      <h4>Bienvenue, {{ request.user.first_name|default:request.user.username }}</h4>
+      <p class="text-muted">Consultez les prix officiels et gerez vos offres de vente.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5"><div class="icon-big text-center"><i class="tim-icons icon-tag text-primary"></i></div></div>
+            <div class="col-7"><div class="numbers"><p class="card-category">Mes offres</p><h3 class="card-title">{{ mes_offres }}</h3></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5"><div class="icon-big text-center"><i class="tim-icons icon-check-2 text-success"></i></div></div>
+            <div class="col-7"><div class="numbers"><p class="card-category">Offres actives</p><h3 class="card-title">{{ offres_actives }}</h3></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5"><div class="icon-big text-center"><i class="tim-icons icon-cart text-warning"></i></div></div>
+            <div class="col-7"><div class="numbers"><p class="card-category">Mes commandes</p><h3 class="card-title">{{ mes_commandes }}</h3></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5"><div class="icon-big text-center"><i class="tim-icons icon-coins text-info"></i></div></div>
+            <div class="col-7"><div class="numbers"><p class="card-category">Chiffre d'affaires</p><h3 class="card-title">{{ ca_total|floatformat:2 }}</h3></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header"><h4 class="card-title">Mes dernieres offres</h4></div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead class="text-primary"><tr><th>Produit</th><th>Marche</th><th>Prix</th><th>Stock</th><th>Statut</th></tr></thead>
+              <tbody>
+                {% for o in dernieres_offres %}
+                <tr><td>{{ o.produit.nom }}</td><td>{{ o.marche.nom }}</td><td>{{ o.prix_unitaire }}</td><td>{{ o.quantite_disponible }}</td><td>{{ o.statut }}</td></tr>
+                {% empty %}
+                <tr><td colspan="5">Aucune offre publiee.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header"><h4 class="card-title">Prix officiels recents</h4><p class="card-category">Relevés valides par l'administration</p></div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead class="text-primary"><tr><th>Produit</th><th>Marche</th><th>Prix</th><th>Date</th></tr></thead>
+              <tbody>
+                {% for r in derniers_prix %}
+                <tr><td>{{ r.produit.nom }}</td><td>{{ r.marche.nom }}</td><td>{{ r.prix }}</td><td>{{ r.date_releve|date:"d/m/Y" }}</td></tr>
+                {% empty %}
+                <tr><td colspan="4">Aucun prix publie.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

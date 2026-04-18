@@ -1,0 +1,113 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %} Validation des releves {% endblock title %}
+
+{% block content %}
+<div class="content">
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert alert-{{ m.tags|default:'info' }}">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row">
+    <div class="col-12 d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h4 class="mb-0">File de validation</h4>
+        <p class="text-muted mb-0">
+          {{ nb_en_attente }} releve{{ nb_en_attente|pluralize }} en attente
+        </p>
+      </div>
+      <a class="btn btn-info btn-sm" href="{% url 'admin_validations_historique' %}">
+        <i class="tim-icons icon-time-alarm"></i> Historique
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <form method="get" class="form-inline mb-3">
+            <label class="mr-2">Statut</label>
+            <select name="statut" class="form-control form-control-sm mr-3" onchange="this.form.submit()">
+              {% for v, lbl in statuts %}
+                <option value="{{ v }}" {% if v == statut_courant %}selected{% endif %}>{{ lbl }}</option>
+              {% endfor %}
+            </select>
+            <label class="mr-2">Produit</label>
+            <select name="produit" class="form-control form-control-sm mr-3" onchange="this.form.submit()">
+              <option value="">— Tous —</option>
+              {% for p in produits %}
+                <option value="{{ p.id }}" {% if request.GET.produit|add:'0' == p.id %}selected{% endif %}>{{ p.nom }}</option>
+              {% endfor %}
+            </select>
+            <label class="mr-2">Marche</label>
+            <select name="marche" class="form-control form-control-sm" onchange="this.form.submit()">
+              <option value="">— Tous —</option>
+              {% for m in marches %}
+                <option value="{{ m.id }}" {% if request.GET.marche|add:'0' == m.id %}selected{% endif %}>{{ m.nom }}</option>
+              {% endfor %}
+            </select>
+          </form>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead class="text-primary">
+                <tr>
+                  <th>Date</th>
+                  <th>Produit</th>
+                  <th>Marche</th>
+                  <th>Collecteur</th>
+                  <th>Prix</th>
+                  <th>Source</th>
+                  <th>Statut</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in releves %}
+                <tr>
+                  <td>{{ r.date_releve|date:"d/m/Y H:i" }}</td>
+                  <td>{{ r.produit.nom }}{% if r.produit.variete %} ({{ r.produit.variete }}){% endif %}</td>
+                  <td>{{ r.marche.nom }} - {{ r.marche.region }}</td>
+                  <td>{{ r.collecteur.username }}</td>
+                  <td>{{ r.prix }} {{ r.produit.unite.symbole }}</td>
+                  <td>{{ r.source|default:"—" }}</td>
+                  <td>
+                    {% if r.statut == 'VALIDE' %}<span class="badge badge-success">{{ r.get_statut_display }}</span>
+                    {% elif r.statut == 'REJETE' %}<span class="badge badge-danger">{{ r.get_statut_display }}</span>
+                    {% elif r.statut == 'EN_ATTENTE' %}<span class="badge badge-warning">{{ r.get_statut_display }}</span>
+                    {% else %}<span class="badge badge-secondary">{{ r.get_statut_display }}</span>{% endif %}
+                  </td>
+                  <td>
+                    <a class="btn btn-sm btn-primary" href="{% url 'admin_releve_detail' r.pk %}">Examiner</a>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" class="text-center">Aucun releve correspondant.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          {% if is_paginated %}
+          <nav>
+            <ul class="pagination justify-content-center">
+              {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?{% if request.GET.statut %}statut={{ request.GET.statut }}&{% endif %}page={{ page_obj.previous_page_number }}">Prec.</a></li>
+              {% endif %}
+              <li class="page-item active"><span class="page-link">{{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</span></li>
+              {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?{% if request.GET.statut %}statut={{ request.GET.statut }}&{% endif %}page={{ page_obj.next_page_number }}">Suiv.</a></li>
+              {% endif %}
+            </ul>
+          </nav>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

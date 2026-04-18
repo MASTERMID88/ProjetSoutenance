@@ -1,0 +1,95 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %} Espace Collecteur {% endblock title %}
+
+{% block content %}
+<div class="content">
+  <div class="row">
+    <div class="col-12 mb-3">
+      <h4>Bienvenue, {{ request.user.first_name|default:request.user.username }}</h4>
+      <p class="text-muted">Saisissez vos releves de prix sur les marches.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5"><div class="icon-big text-center"><i class="tim-icons icon-notes text-primary"></i></div></div>
+            <div class="col-7"><div class="numbers"><p class="card-category">Mes releves</p><h3 class="card-title">{{ total_releves }}</h3></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5"><div class="icon-big text-center"><i class="tim-icons icon-time-alarm text-warning"></i></div></div>
+            <div class="col-7"><div class="numbers"><p class="card-category">En attente</p><h3 class="card-title">{{ en_attente }}</h3></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5"><div class="icon-big text-center"><i class="tim-icons icon-check-2 text-success"></i></div></div>
+            <div class="col-7"><div class="numbers"><p class="card-category">Valides</p><h3 class="card-title">{{ valides }}</h3></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5"><div class="icon-big text-center"><i class="tim-icons icon-simple-remove text-danger"></i></div></div>
+            <div class="col-7"><div class="numbers"><p class="card-category">Rejetes</p><h3 class="card-title">{{ rejetes }}</h3></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Mes derniers releves</h4>
+          <p class="card-category">Historique de vos saisies</p>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead class="text-primary">
+                <tr><th>Produit</th><th>Marche</th><th>Prix</th><th>Statut</th><th>Date</th></tr>
+              </thead>
+              <tbody>
+                {% for r in derniers_releves %}
+                <tr>
+                  <td>{{ r.produit.nom }}</td>
+                  <td>{{ r.marche.nom }}</td>
+                  <td>{{ r.prix }}</td>
+                  <td>
+                    {% if r.statut == 'VALIDE' %}<span class="badge badge-success">{{ r.get_statut_display }}</span>
+                    {% elif r.statut == 'REJETE' %}<span class="badge badge-danger">{{ r.get_statut_display }}</span>
+                    {% else %}<span class="badge badge-warning">{{ r.get_statut_display }}</span>{% endif %}
+                  </td>
+                  <td>{{ r.date_releve|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">Aucun releve saisi.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

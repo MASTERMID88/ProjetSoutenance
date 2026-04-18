@@ -1,0 +1,85 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %} Mes releves {% endblock title %}
+
+{% block content %}
+<div class="content">
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert alert-{{ m.tags|default:'info' }}">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row">
+    <div class="col-12 d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0">Mes releves de prix</h4>
+      <a class="btn btn-primary btn-sm" href="{% url 'releve_create' %}">
+        <i class="tim-icons icon-simple-add"></i> Nouveau releve
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead class="text-primary">
+                <tr>
+                  <th>Produit</th>
+                  <th>Marche</th>
+                  <th>Prix</th>
+                  <th>Date</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in releves %}
+                <tr>
+                  <td>{{ r.produit.nom }}{% if r.produit.variete %} ({{ r.produit.variete }}){% endif %}</td>
+                  <td>{{ r.marche.nom }} - {{ r.marche.region }}</td>
+                  <td>{{ r.prix }} {{ r.produit.unite.symbole }}</td>
+                  <td>{{ r.date_releve|date:"d/m/Y H:i" }}</td>
+                  <td>
+                    {% if r.statut == 'VALIDE' %}<span class="badge badge-success">{{ r.get_statut_display }}</span>
+                    {% elif r.statut == 'REJETE' %}<span class="badge badge-danger">{{ r.get_statut_display }}</span>
+                    {% elif r.statut == 'EN_ATTENTE' %}<span class="badge badge-warning">{{ r.get_statut_display }}</span>
+                    {% else %}<span class="badge badge-secondary">{{ r.get_statut_display }}</span>{% endif %}
+                  </td>
+                  <td>
+                    {% if r.statut != 'VALIDE' %}
+                      <a class="btn btn-sm btn-info" href="{% url 'releve_update' r.pk %}">Modifier</a>
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center">Aucun releve saisi. <a href="{% url 'releve_create' %}">En creer un</a>.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          {% if is_paginated %}
+          <nav>
+            <ul class="pagination justify-content-center">
+              {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Prec.</a></li>
+              {% endif %}
+              <li class="page-item active"><span class="page-link">{{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</span></li>
+              {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Suiv.</a></li>
+              {% endif %}
+            </ul>
+          </nav>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

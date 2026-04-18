@@ -1,0 +1,445 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %} Prix officiels - Riz et Sorgho Bamako {% endblock title %}
+
+{% block extrahead %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock extrahead %}
+
+{% block extrastyle %}
+<style>
+  #map { height: 420px; border-radius: .375rem; }
+  .kpi-card .numbers .card-title { color: #fff; }
+  .price-value { color: #00f2c3; font-weight: 700; }
+  .public-sidebar-logo { padding: 1rem; text-align: center; }
+  .public-sidebar-logo img { max-width: 60px; }
+  .badge-bamako { background: #00f2c3; color: #1e1e2e; }
+  .filter-label { color: #9a9a9a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .5px; }
+  .leaflet-popup-content-wrapper { background: #27293d; color: #fff; border-radius: 6px; }
+  .leaflet-popup-tip { background: #27293d; }
+  .leaflet-popup-content strong { color: #00f2c3; }
+</style>
+{% endblock extrastyle %}
+
+{% block sidebar %}
+<div class="sidebar" data-color="green">
+  <div class="sidebar-wrapper">
+    <div class="logo">
+      <a href="{% url 'public_prices' %}" class="simple-text logo-mini">SP</a>
+      <a href="{% url 'public_prices' %}" class="simple-text logo-normal">SuiviPrix Mali</a>
+    </div>
+    <ul class="nav">
+      <li class="active">
+        <a href="{% url 'public_prices' %}">
+          <i class="tim-icons icon-world"></i>
+          <p>Prix publics</p>
+        </a>
+      </li>
+      <li>
+        <a href="#map" onclick="document.getElementById('map').scrollIntoView({behavior:'smooth'})">
+          <i class="tim-icons icon-square-pin"></i>
+          <p>Carte des marches</p>
+        </a>
+      </li>
+      <li>
+        <a href="#chart-card" onclick="document.getElementById('chart-card').scrollIntoView({behavior:'smooth'})">
+          <i class="tim-icons icon-chart-bar-32"></i>
+          <p>Evolution</p>
+        </a>
+      </li>
+      <li>
+        <a href="#table-card" onclick="document.getElementById('table-card').scrollIntoView({behavior:'smooth'})">
+          <i class="tim-icons icon-bullet-list-67"></i>
+          <p>Derniers prix</p>
+        </a>
+      </li>
+      {% if request.user.is_authenticated %}
+      <li>
+        <a href="{% url 'dashboard' %}">
+          <i class="tim-icons icon-badge"></i>
+          <p>Mon espace</p>
+        </a>
+      </li>
+      {% else %}
+      <li>
+        <a href="/accounts/auth-signin/?next=/">
+          <i class="tim-icons icon-key-25"></i>
+          <p>Connexion</p>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </div>
+</div>
+{% endblock sidebar %}
+
+{% block navigation %}
+<nav class="navbar navbar-expand-lg navbar-absolute navbar-transparent">
+  <div class="container-fluid">
+    <div class="navbar-wrapper">
+      <div class="navbar-toggle d-inline">
+        <button type="button" class="navbar-toggler">
+          <span class="navbar-toggler-bar bar1"></span>
+          <span class="navbar-toggler-bar bar2"></span>
+          <span class="navbar-toggler-bar bar3"></span>
+        </button>
+      </div>
+      <a class="navbar-brand" href="{% url 'public_prices' %}">
+        Prix officiels - Riz et Sorgho au District de Bamako
+      </a>
+    </div>
+  </div>
+</nav>
+{% endblock navigation %}
+
+{% block content %}
+<div class="content">
+
+  <!-- KPIs -->
+  <div class="row">
+    <div class="col-lg-4 col-md-6">
+      <div class="card card-stats kpi-card">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5">
+              <div class="info-icon text-center icon-success">
+                <i class="tim-icons icon-check-2"></i>
+              </div>
+            </div>
+            <div class="col-7">
+              <div class="numbers">
+                <p class="card-category">Releves valides</p>
+                <h3 class="card-title" id="kpi-total">—</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <hr>
+          <div class="stats"><i class="tim-icons icon-refresh-01"></i> actualise toutes les 60s</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+      <div class="card card-stats kpi-card">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5">
+              <div class="info-icon text-center icon-warning">
+                <i class="tim-icons icon-coins"></i>
+              </div>
+            </div>
+            <div class="col-7">
+              <div class="numbers">
+                <p class="card-category">Prix moyen (FCFA)</p>
+                <h3 class="card-title" id="kpi-avg">—</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <hr>
+          <div class="stats"><i class="tim-icons icon-chart-pie-36"></i> selon les filtres actifs</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+      <div class="card card-stats kpi-card">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5">
+              <div class="info-icon text-center icon-primary">
+                <i class="tim-icons icon-square-pin"></i>
+              </div>
+            </div>
+            <div class="col-7">
+              <div class="numbers">
+                <p class="card-category">Marches couverts</p>
+                <h3 class="card-title" id="kpi-marches">—</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <hr>
+          <div class="stats"><span class="badge badge-bamako">Bamako</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Filtres -->
+    <div class="col-lg-3">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-category">Filtres</h5>
+          <h3 class="card-title"><i class="tim-icons icon-settings"></i> Affiner</h3>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="filter-label">Produit</label>
+            <select id="f-produit" class="form-control">
+              <option value="">Tous</option>
+              {% for p in produits %}<option value="{{ p.id }}">{{ p.nom }}{% if p.variete %} ({{ p.variete }}){% endif %}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="filter-label">Marche</label>
+            <select id="f-marche" class="form-control">
+              <option value="">Tous</option>
+              {% for m in marches %}<option value="{{ m.id }}">{{ m.nom }}{% if m.commune %} - {{ m.commune }}{% endif %}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="filter-label">Commune</label>
+            <select id="f-commune" class="form-control">
+              <option value="">Toutes</option>
+              {% for c in communes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="filter-label">Periode</label>
+            <select id="f-jours" class="form-control">
+              <option value="7">7 jours</option>
+              <option value="30" selected>30 jours</option>
+              <option value="90">90 jours</option>
+              <option value="365">1 an</option>
+            </select>
+          </div>
+          <button class="btn btn-success btn-block" id="btn-apply">
+            <i class="tim-icons icon-check-2"></i> Appliquer
+          </button>
+          <button class="btn btn-link btn-block text-white" id="btn-reset">Reinitialiser</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Carte + graphique -->
+    <div class="col-lg-9">
+      <div class="card" id="map-card">
+        <div class="card-header">
+          <h5 class="card-category">Localisation</h5>
+          <h3 class="card-title"><i class="tim-icons icon-square-pin"></i> Marches du District de Bamako</h3>
+          <p class="card-category">Cliquez sur un marqueur pour voir les derniers prix.</p>
+        </div>
+        <div class="card-body">
+          <div id="map"></div>
+        </div>
+      </div>
+
+      <div class="card card-chart" id="chart-card">
+        <div class="card-header">
+          <h5 class="card-category">Tendance</h5>
+          <h3 class="card-title"><i class="tim-icons icon-chart-bar-32 text-success"></i> Evolution du prix moyen</h3>
+        </div>
+        <div class="card-body">
+          <div class="chart-area"><canvas id="chart-evolution"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card" id="table-card">
+        <div class="card-header">
+          <h5 class="card-category">Publication officielle</h5>
+          <h3 class="card-title"><i class="tim-icons icon-bullet-list-67"></i> Derniers prix par marche</h3>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table tablesorter">
+              <thead class="text-primary">
+                <tr>
+                  <th>Produit</th>
+                  <th>Marche</th>
+                  <th>Commune</th>
+                  <th class="text-right">Prix</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-derniers">
+                <tr><td colspan="5" class="text-center text-muted py-4">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block extrajs %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  const API = "/api/v1";
+  const BAMAKO = [12.6392, -8.0029];
+  const BAMAKO_BOUNDS = [[12.45, -8.20], [12.78, -7.80]];
+  let map, markers = [], chart;
+
+  function qs(params) {
+    const sp = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v) sp.append(k, v); });
+    return sp.toString();
+  }
+
+  function currentFilters() {
+    return {
+      region: "{{ bamako_region|escapejs }}",
+      produit: document.getElementById("f-produit").value,
+      marche: document.getElementById("f-marche").value,
+      commune: document.getElementById("f-commune").value,
+      jours: document.getElementById("f-jours").value || "30",
+    };
+  }
+
+  function initMap() {
+    map = L.map("map", {
+      maxBounds: BAMAKO_BOUNDS,
+      maxBoundsViscosity: 1.0,
+      minZoom: 11,
+      maxZoom: 17,
+    }).setView(BAMAKO, 12);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap",
+      maxZoom: 18,
+    }).addTo(map);
+    L.rectangle(BAMAKO_BOUNDS, {
+      color: "#00f2c3", weight: 1.5, fill: false, dashArray: "4 6"
+    }).addTo(map);
+  }
+
+  function clearMarkers() {
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+  }
+
+  async function loadDerniers() {
+    const f = currentFilters();
+    const res = await fetch(`${API}/prix/derniers/?${qs(f)}&page_size=100`);
+    const data = await res.json();
+    const items = data.results || data;
+    renderTable(items);
+    renderMarkers(items);
+    renderKpis(items);
+  }
+
+  function renderKpis(items) {
+    document.getElementById("kpi-total").textContent = items.length;
+    if (items.length) {
+      const avg = items.reduce((s, r) => s + parseFloat(r.prix), 0) / items.length;
+      document.getElementById("kpi-avg").textContent = Math.round(avg).toLocaleString("fr-FR");
+    } else {
+      document.getElementById("kpi-avg").textContent = "—";
+    }
+    const marches = new Set(items.map(r => r.marche.id));
+    document.getElementById("kpi-marches").textContent = marches.size;
+  }
+
+  function renderTable(items) {
+    const tb = document.getElementById("tbody-derniers");
+    if (!items.length) {
+      tb.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Aucun prix publie pour ces filtres.</td></tr>';
+      return;
+    }
+    tb.innerHTML = items.map(r => `
+      <tr>
+        <td>${r.produit.nom}${r.produit.variete ? " <small class='text-muted'>("+r.produit.variete+")</small>" : ""}</td>
+        <td>${r.marche.nom}</td>
+        <td>${r.marche.commune || "—"}</td>
+        <td class="text-right"><span class="price-value">${parseFloat(r.prix).toLocaleString("fr-FR")}</span> <small class="text-muted">${r.produit.unite ? r.produit.unite.symbole : ""}</small></td>
+        <td><small>${new Date(r.date_releve).toLocaleDateString("fr-FR")}</small></td>
+      </tr>`).join("");
+  }
+
+  function renderMarkers(items) {
+    clearMarkers();
+    const byMarche = {};
+    items.forEach(r => {
+      if (r.marche.latitude == null || r.marche.longitude == null) return;
+      const k = r.marche.id;
+      if (!byMarche[k]) byMarche[k] = { marche: r.marche, prix: [] };
+      byMarche[k].prix.push(r);
+    });
+    Object.values(byMarche).forEach(entry => {
+      const m = entry.marche;
+      const popup = `<strong>${m.nom}</strong><br><small>${m.quartier || ""} ${m.commune || ""}</small><hr class='my-1' style='border-color:#444;'>`
+        + entry.prix.map(r => `<div>${r.produit.nom}: <strong>${parseFloat(r.prix).toLocaleString("fr-FR")} FCFA</strong></div>`).join("");
+      const mk = L.marker([m.latitude, m.longitude]).addTo(map).bindPopup(popup);
+      markers.push(mk);
+    });
+    if (markers.length) {
+      const group = L.featureGroup(markers);
+      map.fitBounds(group.getBounds().pad(0.2));
+    }
+  }
+
+  async function loadHistorique() {
+    const f = currentFilters();
+    const res = await fetch(`${API}/prix/historique/?${qs(f)}`);
+    const data = await res.json();
+    const labels = data.map(d => d.date_jour);
+    const moyen = data.map(d => parseFloat(d.prix_moyen));
+    const min = data.map(d => parseFloat(d.prix_min));
+    const max = data.map(d => parseFloat(d.prix_max));
+    if (chart) chart.destroy();
+    const ctx = document.getElementById("chart-evolution").getContext("2d");
+    const grd = ctx.createLinearGradient(0, 230, 0, 50);
+    grd.addColorStop(1, "rgba(0,242,195,0.20)");
+    grd.addColorStop(0.4, "rgba(0,242,195,0.05)");
+    grd.addColorStop(0, "rgba(0,242,195,0)");
+    chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          { label: "Prix moyen", data: moyen, borderColor: "#00f2c3", backgroundColor: grd, fill: true, tension: .35, pointBackgroundColor: "#00f2c3" },
+          { label: "Min", data: min, borderColor: "#1d8cf8", borderDash: [4, 4], tension: .35, pointRadius: 0 },
+          { label: "Max", data: max, borderColor: "#fd5d93", borderDash: [4, 4], tension: .35, pointRadius: 0 },
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom", labels: { color: "#9a9a9a" } },
+          tooltip: { backgroundColor: "#27293d" }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            ticks: { color: "#9a9a9a" },
+            grid: { color: "rgba(255,255,255,0.06)" }
+          },
+          x: {
+            ticks: { color: "#9a9a9a", maxTicksLimit: 8 },
+            grid: { color: "rgba(255,255,255,0.06)" }
+          }
+        }
+      }
+    });
+  }
+
+  function refreshAll() { loadDerniers(); loadHistorique(); }
+
+  document.getElementById("btn-apply").addEventListener("click", refreshAll);
+  document.getElementById("btn-reset").addEventListener("click", () => {
+    ["f-produit", "f-marche", "f-commune"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("f-jours").value = "30";
+    refreshAll();
+  });
+
+  initMap();
+  refreshAll();
+  setInterval(refreshAll, 60000);
+})();
+</script>
+{% endblock extrajs %}
