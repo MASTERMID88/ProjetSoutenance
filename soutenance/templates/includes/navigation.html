@@ -1,0 +1,45 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-absolute navbar-transparent">
+  <div class="container-fluid">
+    <div class="navbar-wrapper">
+      <div class="navbar-toggle d-inline">
+        <button type="button" class="navbar-toggler">
+          <span class="navbar-toggler-bar bar1"></span>
+          <span class="navbar-toggler-bar bar2"></span>
+          <span class="navbar-toggler-bar bar3"></span>
+        </button>
+      </div>
+      <a class="navbar-brand" href="{% url 'dashboard' %}">Suivi des prix - {{ segment_label|default:segment }}</a>
+    </div>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation">
+      <span class="navbar-toggler-bar navbar-kebab"></span>
+      <span class="navbar-toggler-bar navbar-kebab"></span>
+      <span class="navbar-toggler-bar navbar-kebab"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navigation">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link btn btn-sm btn-primary" href="{% url 'admin:index' %}">
+            Ouvrir l'admin Django
+          </a>
+        </li>
+        {% if request.user.is_authenticated %}
+        <li class="dropdown nav-item">
+          <a href="{% url 'logout' %}" class="dropdown-toggle nav-link" data-toggle="dropdown">
+            <div class="photo">
+              <img src="{% static 'assets/img/anime3.png' %}" alt="Profile Photo">
+            </div>
+            <p class="d-lg-none">Deconnexion</p>
+          </a>
+          <ul class="dropdown-menu dropdown-navbar">
+            <li class="nav-link"><a href="{% url 'admin:password_change' %}" class="dropdown-item">Changer le mot de passe</a></li>
+            <li class="nav-link"><a href="{% url 'logout' %}" class="dropdown-item">Deconnexion</a></li>
+          </ul>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>

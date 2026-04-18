@@ -1,0 +1,142 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %} Tableau de bord {% endblock title %}
+
+{% block content %}
+<div class="content">
+  <div class="row">
+    <div class="col-12 text-right mb-3">
+      <a class="btn btn-primary btn-sm" href="{% url 'admin:index' %}">
+        Gerer les objets (CRUD)
+      </a>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5">
+              <div class="icon-big text-center icon-warning">
+                <i class="tim-icons icon-chart-pie-36 text-primary"></i>
+              </div>
+            </div>
+            <div class="col-7">
+              <div class="numbers">
+                <p class="card-category">Total releves</p>
+                <h3 class="card-title">{{ total_releves }}</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5">
+              <div class="icon-big text-center">
+                <i class="tim-icons icon-time-alarm text-warning"></i>
+              </div>
+            </div>
+            <div class="col-7">
+              <div class="numbers">
+                <p class="card-category">En attente</p>
+                <h3 class="card-title">{{ releves_en_attente }}</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5">
+              <div class="icon-big text-center">
+                <i class="tim-icons icon-check-2 text-success"></i>
+              </div>
+            </div>
+            <div class="col-7">
+              <div class="numbers">
+                <p class="card-category">Valides</p>
+                <h3 class="card-title">{{ releves_valides }}</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-5">
+              <div class="icon-big text-center">
+                <i class="tim-icons icon-coins text-info"></i>
+              </div>
+            </div>
+            <div class="col-7">
+              <div class="numbers">
+                <p class="card-category">Prix moyen</p>
+                <h3 class="card-title">
+                  {% if prix_moyen_global %}{{ prix_moyen_global|floatformat:2 }}{% else %}0.00{% endif %}
+                </h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Derniers releves de prix</h4>
+          <p class="card-category">Riz et Sorgho - Mali</p>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table tablesorter">
+              <thead class="text-primary">
+                <tr>
+                  <th>Produit</th>
+                  <th>Marche</th>
+                  <th>Collecteur</th>
+                  <th>Prix</th>
+                  <th>Statut</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in derniers_releves %}
+                <tr>
+                  <td>{{ r.produit.nom }}</td>
+                  <td>{{ r.marche.nom }}</td>
+                  <td>{{ r.collecteur.username }}</td>
+                  <td>{{ r.prix }}</td>
+                  <td>{{ r.get_statut_display }}</td>
+                  <td>{{ r.date_releve|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="6">Aucun releve disponible.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

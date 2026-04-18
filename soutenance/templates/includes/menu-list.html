@@ -1,0 +1,25 @@
+{% load static %}
+<ul class="nav">
+  <li class="{% if 'dashboard' in segment %} active {% endif %}">
+    <a href="{% url 'dashboard' %}">
+      <i class="tim-icons icon-chart-pie-36"></i>
+      <p>Tableau de bord</p>
+    </a>
+  </li>
+
+  <li>
+    <a href="{% url 'admin:index' %}">
+      <i class="tim-icons icon-bullet-list-67"></i>
+      <p>Gestion des donnees</p>
+    </a>
+  </li>
+
+  {% if request.user.is_authenticated %}
+  <li>
+    <a href="{% url 'logout' %}">
+      <i class="tim-icons icon-button-power"></i>
+      <p>Deconnexion</p>
+    </a>
+  </li>
+  {% endif %}
+</ul>
