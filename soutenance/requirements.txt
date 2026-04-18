@@ -1,4 +1,14 @@
-asgiref==3.11.1
 Django==6.0.3
+asgiref==3.11.1
 sqlparse==0.5.5
 tzdata==2025.3
+
+# UI / template admin
+django-admin-black==1.0.20
+
+# Images (photos produits, marches, preuves de releve)
+Pillow>=10.0
+
+# API REST (future app mobile collecteur, dashboards temps reel)
+djangorestframework>=3.15
+django-filter>=24.0

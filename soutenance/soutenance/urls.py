@@ -21,6 +21,9 @@ from .dashboard_views import dashboard
 
 urlpatterns = [
     path('', dashboard, name='dashboard'),
+    path('api/v1/', include('soutenance.api_urls')),
+    path('api-auth/', include('rest_framework.urls')),
+    path('', include('pricing.urls')),
     path('', include('admin_black.urls')),
     path('admin/', admin.site.urls),
 ]

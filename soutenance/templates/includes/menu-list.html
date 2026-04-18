@@ -6,13 +6,48 @@
       <p>Tableau de bord</p>
     </a>
   </li>
+  <li>
+    <a href="{% url 'public_prices' %}" target="_blank">
+      <i class="tim-icons icon-world"></i>
+      <p>Prix publics</p>
+    </a>
+  </li>
 
+  {% if request.user.is_authenticated and request.user.role == 'COLLECTEUR' or request.user.is_superuser %}
+  <li class="{% if segment == 'releves' %} active {% endif %}">
+    <a href="{% url 'mes_releves' %}">
+      <i class="tim-icons icon-notes"></i>
+      <p>Mes releves</p>
+    </a>
+  </li>
+  <li>
+    <a href="{% url 'releve_create' %}">
+      <i class="tim-icons icon-simple-add"></i>
+      <p>Nouveau releve</p>
+    </a>
+  </li>
+  {% endif %}
+
+  {% if request.user.is_superuser or request.user.is_staff or request.user.role == 'ADMIN' %}
+  <li class="{% if segment == 'validation' %} active {% endif %}">
+    <a href="{% url 'admin_validation_queue' %}">
+      <i class="tim-icons icon-check-2"></i>
+      <p>Validation releves</p>
+    </a>
+  </li>
+  <li class="{% if segment == 'historique' %} active {% endif %}">
+    <a href="{% url 'admin_validations_historique' %}">
+      <i class="tim-icons icon-time-alarm"></i>
+      <p>Historique validations</p>
+    </a>
+  </li>
   <li>
     <a href="{% url 'admin:index' %}">
       <i class="tim-icons icon-bullet-list-67"></i>
       <p>Gestion des donnees</p>
     </a>
   </li>
+  {% endif %}
 
   {% if request.user.is_authenticated %}
   <li>
